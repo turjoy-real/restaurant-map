@@ -1,30 +1,84 @@
-/**
- * If you are not familiar with React Navigation, refer to the "Fundamentals" guide:
- * https://reactnavigation.org/docs/getting-started
- *
- */
-import { FontAwesome } from '@expo/vector-icons';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { NavigationContainer, DefaultTheme, DarkTheme } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import * as React from 'react';
-import { ColorSchemeName, Pressable } from 'react-native';
+import {
+  NavigationContainer,
+  DefaultTheme,
+  DarkTheme,
+} from "@react-navigation/native";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import app from "firebase/compat/app";
+import "firebase/compat/auth";
+import { Box, Button, Text } from "native-base";
+import * as React from "react";
+// eslint-disable-next-line
+import { ColorSchemeName, useWindowDimensions } from "react-native";
+import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import LoginOne from "../screens/LoginScreens/LoginOne/LoginOne.screen";
+import LoginTwo from "../screens/LoginScreens/LoginTwo/LoginTwo.screen";
+import ModalScreen from "../screens/ModalScreen";
+import NotFoundScreen from "../screens/NotFoundScreen";
 
-import Colors from '../constants/Colors';
-import useColorScheme from '../hooks/useColorScheme';
-import ModalScreen from '../screens/ModalScreen';
-import NotFoundScreen from '../screens/NotFoundScreen';
-import TabOneScreen from '../screens/TabOneScreen';
-import TabTwoScreen from '../screens/TabTwoScreen';
-import { RootStackParamList, RootTabParamList, RootTabScreenProps } from '../types';
-import LinkingConfiguration from './LinkingConfiguration';
+import StartupScreen from "../screens/StartUpScreen/StartUp.screen";
+import { fetchUser, signOut } from "../store/actions/auth";
+import { fetchProfile } from "../store/actions/companyProfile";
+import useAuthData from "../store/selectors/auth";
+import useCompanyData from "../store/selectors/company";
+import { useAppDispatch } from "../store/selectors/hooks";
+import { RootDrawerParamList, RootStackParamList } from "../types";
 
-export default function Navigation({ colorScheme }: { colorScheme: ColorSchemeName }) {
+import { FontAwesome5 } from "@expo/vector-icons";
+
+import attendanceStackNavigator from "./stacks/attendanceStack";
+import PaymentStackNavigator from "./stacks/paymentStack";
+import SettingsStackNavigator from "./stacks/settingsStack";
+export default function Navigation({
+  colorScheme,
+}: {
+  colorScheme: ColorSchemeName;
+}) {
+  const { token, didTryAutoLogin, currentCompany } = useAuthData();
+  const { id } = useCompanyData();
+  const company = useCompanyData();
+  const isAuth = !!token;
+  const isReg = !!id;
+
+  const dispatch = useAppDispatch();
+  const Auth = useAuthData();
+  React.useEffect(() => {
+    app.auth().onAuthStateChanged(async (user) => {
+      console.log("fetching", user?.uid, !!user, company);
+
+      const obj = {
+        userId: "",
+        token: "",
+      };
+      if (user) {
+        const userId = user?.uid;
+        const token = await user?.getIdToken();
+
+        obj.userId = userId;
+        obj.token = token;
+      }
+
+      dispatch(fetchUser(obj));
+    });
+  }, [Auth.userId]);
+
+  React.useEffect(() => {
+    if (currentCompany) {
+      dispatch(fetchProfile());
+    }
+  }, [currentCompany]);
+
+  console.log("isAuth", isAuth, "isReg", isReg);
+
   return (
     <NavigationContainer
-      linking={LinkingConfiguration}
-      theme={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <RootNavigator />
+      // linking={LinkingConfiguration}
+      theme={colorScheme === "dark" ? DarkTheme : DefaultTheme}
+    >
+      {isAuth && didTryAutoLogin && <RootNavigator />}
+
+      {!isAuth && didTryAutoLogin && <AuthNavigator />}
+      {!isAuth && !didTryAutoLogin && <StartupScreen />}
     </NavigationContainer>
   );
 }
@@ -38,70 +92,89 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 function RootNavigator() {
   return (
     <Stack.Navigator>
-      <Stack.Screen name="Root" component={BottomTabNavigator} options={{ headerShown: false }} />
-      <Stack.Screen name="NotFound" component={NotFoundScreen} options={{ title: 'Oops!' }} />
-      <Stack.Group screenOptions={{ presentation: 'modal' }}>
+      <Stack.Screen
+        name="Root"
+        component={BottomTabNavigator}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="NotFound"
+        component={NotFoundScreen}
+        options={{ title: "Oops!" }}
+      />
+      <Stack.Group screenOptions={{ presentation: "modal" }}>
         <Stack.Screen name="Modal" component={ModalScreen} />
       </Stack.Group>
     </Stack.Navigator>
   );
 }
 
-/**
- * A bottom tab navigator displays tab buttons on the bottom of the display to switch screens.
- * https://reactnavigation.org/docs/bottom-tab-navigator
- */
-const BottomTab = createBottomTabNavigator<RootTabParamList>();
+// AuthStack
+const AuthStack = createNativeStackNavigator<RootDrawerParamList>();
 
-function BottomTabNavigator() {
-  const colorScheme = useColorScheme();
-
+function AuthNavigator() {
   return (
-    <BottomTab.Navigator
-      initialRouteName="TabOne"
-      screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme].tint,
-      }}>
-      <BottomTab.Screen
-        name="TabOne"
-        component={TabOneScreen}
-        options={({ navigation }: RootTabScreenProps<'TabOne'>) => ({
-          title: 'Tab One',
-          tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
-          headerRight: () => (
-            <Pressable
-              onPress={() => navigation.navigate('Modal')}
-              style={({ pressed }) => ({
-                opacity: pressed ? 0.5 : 1,
-              })}>
-              <FontAwesome
-                name="info-circle"
-                size={25}
-                color={Colors[colorScheme].text}
-                style={{ marginRight: 15 }}
-              />
-            </Pressable>
-          ),
-        })}
-      />
-      <BottomTab.Screen
-        name="TabTwo"
-        component={TabTwoScreen}
-        options={{
-          title: 'Tab Two',
-          tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
-        }}
-      />
-    </BottomTab.Navigator>
+    <AuthStack.Navigator>
+      <AuthStack.Screen name="LoginOne" component={LoginOne} />
+      {/* <AuthStack.Screen name="LoginTwo" component={LoginTwo} /> */}
+    </AuthStack.Navigator>
   );
 }
 
-/**
- * You can explore the built-in icon families and icons on the web at https://icons.expo.fyi/
- */
-function TabBarIcon(props: {
-  name: React.ComponentProps<typeof FontAwesome>['name'];
-  color: string;
-}) {
-  return <FontAwesome size={30} style={{ marginBottom: -3 }} {...props} />;
-}
+//RegStack
+// const RegStack = createNativeStackNavigator<RootDrawerParamList>();
+
+// function RegNavigator() {
+//   const { data } = useCompanyData();
+//   const { currentCompany } = useAuthData();
+//   return (
+//     <RegStack.Navigator>
+//       {!currentCompany && !data && (
+//         <RegStack.Screen name="RegOne" component={RegOne} />
+//       )}
+//       {currentCompany && !data && (
+//         <RegStack.Screen name="RegTwo" component={RegTwo} />
+//       )}
+//     </RegStack.Navigator>
+//   );
+// }
+
+// Tab navigation
+
+const Tab = createBottomTabNavigator();
+
+export const BottomTabNavigator = () => {
+  // const dispatch = useAppDispatch();
+
+  return (
+    <Tab.Navigator screenOptions={{ headerShown: false }}>
+      <Tab.Screen
+        name="Attendance"
+        component={attendanceStackNavigator}
+        options={{
+          tabBarIcon: () => (
+            <FontAwesome5 name="user-tie" size={24} color="#16A5A3" />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="Payment"
+        component={PaymentStackNavigator}
+        options={{
+          tabBarIcon: () => (
+            <FontAwesome5 name="id-card" size={26} color="#16A5A3" />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="Settings"
+        component={SettingsStackNavigator}
+        options={{
+          tabBarIcon: () => (
+            <FontAwesome5 name="id-card" size={26} color="#16A5A3" />
+          ),
+        }}
+      />
+    </Tab.Navigator>
+  );
+};
