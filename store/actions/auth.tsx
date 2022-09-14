@@ -38,7 +38,7 @@ export const fetchUser = createAsyncThunk(
         payload.fullName = resData.fullName;
         payload.currentCompany = resData.companiesOwned[0].companyId;
       }
-      // console.log('fetch res', resData, 'payload', payload);
+      console.log("fetch res", resData, "payload", payload);
       return payload;
     } catch (error: any) {
       const payload: Error = {
@@ -112,12 +112,15 @@ export const mobileSignIn = createAsyncThunk(
       userId: "",
       token: "",
     };
+
     app
       .auth()
       .signInWithCredential(credential)
       .then(async (res) => {
         const userId = res?.user?.uid;
         const token = await res?.user?.getIdToken();
+
+        console.log("stuff 1", userId, token);
 
         payload.userId = userId;
         payload.token = token;
@@ -128,9 +131,11 @@ export const mobileSignIn = createAsyncThunk(
           errorMessage: error.message,
         };
 
+        console.log("payload err", payload);
+
         return payload;
       });
-
+    console.log("payload123", payload);
     return payload;
   }
 );

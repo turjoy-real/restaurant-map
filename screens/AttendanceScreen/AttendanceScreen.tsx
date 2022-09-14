@@ -1,14 +1,22 @@
-import { Alert, Button, Image } from "native-base";
+import {
+  Button,
+  HStack,
+  Image,
+  Avatar,
+  Divider,
+  Box,
+  VStack,
+} from "native-base";
 import React, { useState, useEffect } from "react";
 import { StyleSheet } from "react-native";
 import { Text, View } from "../../components/Themed";
 import useAuthData from "../../store/selectors/auth";
 import * as ImagePicker from "expo-image-picker";
 import * as Location from "expo-location";
-import { patch, post, productImagesDocsRef } from "../../APIs/helpers";
+import { patch, post } from "../../APIs/helpers";
 import app from "firebase/compat/app";
 import "firebase/compat/storage";
-import { baseUrl } from "../../utils/baseUrl";
+import { BoxI } from "../../components/molecules/BoxI";
 
 export default function AttendanceScreen() {
   const Auth = useAuthData();
@@ -19,9 +27,10 @@ export default function AttendanceScreen() {
     file: "",
     author: "",
     timestamp: "",
+    approved: false,
   });
   const [imgLoading, setImgLoading] = useState(false);
-  const [data, setData] = useState();
+  const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [image, setImage] = useState("");
   const [location, setLocation] = useState<any | null>(null);
   const [address, setAddress] = useState<any | null>(null);
@@ -55,34 +64,14 @@ export default function AttendanceScreen() {
       setImage(result.uri);
       const add = await Location.reverseGeocodeAsync(location.coords);
       setAddress(add[0]);
-      console.log("ggg", add);
     }
   };
-
-  // useEffect(() => {
-  //   (async () => {
-  //     const add = await Location.reverseGeocodeAsync(location, {
-  //       accuracy: 3,
-  //     });
-  //     setAddress(add);
-  //     console.log("ggg", add);
-  //   })();
-
-  //   return () => {
-  //     // this now gets called when the component unmounts
-  //   };
-  // }, [image]);
-
-  // useEffect(() => {
-  //   Location.setGoogleApiKey("AIzaSyDaJLTTolQuMcE8p98s_ElUpBSvbRkR-6g");
-  // }, []);
-
-  // Image Upload:
 
   const onImageUpload = async () => {
     setImgLoading(true);
     let createDate = new Date();
-    let timestamp = createDate.toISOString();
+    let timestamp: number = Date.parse(createDate.toISOString());
+
     const blob: any = await new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest();
       xhr.onload = function () {
@@ -111,7 +100,8 @@ export default function AttendanceScreen() {
         title: Auth.userId ? "ABC" : "Null",
         file: fileLink,
         author: Auth.userId ? "ABC" : "Null",
-        timestamp,
+        timestamp: createDate.toISOString(),
+        approved: false,
       });
 
       if (userId && timestamp) {
@@ -127,30 +117,22 @@ export default function AttendanceScreen() {
               file: fileLink,
               author: Auth.userId ? "ABC" : "Null",
               timestamp,
+              approved: false,
               text,
               // location,
             }),
           }
         );
-        // const response = await post(`attendance/${userId}/${timestamp}`, {
-        //   title: Auth.userId ? "ABC" : "Null",
-        //   file: fileLink,
-        //   author: Auth.userId ? "ABC" : "Null",
-        //   timestamp,
-        //   text,
-        //   // location,
-        // });
+
         const res = await response.json();
 
-        console.log("...", res, userId, timestamp, fileLink);
+        // console.log("...", res);
       }
 
       // await productImagesDocsRef(userId, timestamp).put(blob);
     } catch (error: any) {
       console.log("ll", error.message);
     }
-
-    // console.log("upload try", fileLink);
     blob.close();
     //eslint-disable-next-line
 
@@ -159,6 +141,8 @@ export default function AttendanceScreen() {
 
   // Delete Image
   const handleImageDelete = async () => {
+    let createDate = new Date();
+    // let timestamp: number = Date.parse(createDate.toISOString());
     await app
       .storage()
       .ref(`users/${userId}/attendanceImages/${imageData.timestamp}/`)
@@ -169,29 +153,84 @@ export default function AttendanceScreen() {
           file: "",
           author: "Null",
           timestamp: "",
+          approved: false,
         });
       })
       .catch((e: any) => console.log(e.message));
   };
 
+  // Present, absent, overtimr array
+
+  // const presentArray = [
+  //   ["Present", "Absent", "Half Day"],
+  //   ["Leave", "Late Fine", "Overtime"],
+  // ];
+
+  // Current Year and month
+
+  const currentYear = new Date().getFullYear();
+
+  const monthNames = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+  ];
+
+  const dateObj = new Date();
+  const monthNumber = dateObj.getMonth();
+  const monthName = monthNames[monthNumber];
+
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Attendance Screen</Text>
+      <Box m="2">
+        <Text>
+          {currentYear} {monthName}
+        </Text>
+      </Box>
+      <Divider m="4" thickness="2" />
+
+      {/* {presentArray.forEach((employeeA) => {
+        employeeA.forEach((data) => {
+          console.log(data);
+        });
+      })} */}
+
       <Button onPress={takePhoto}>Take Photo</Button>
 
       {!!image && (
         <>
-          <Image
-            alt={"stuff"}
-            source={{ uri: image }}
-            style={{ width: 200, height: 200 }}
-          />
-          <Text>{text}</Text>
+          <HStack alignItems="center">
+            <Image alt={"stuff"} source={{ uri: image }} size="xs" m="2" />
+
+            <Text>{text}</Text>
+          </HStack>
         </>
       )}
-      <Button onPress={handleImageDelete}>Delete</Button>
-      <Button onPress={onImageUpload}>Confirm</Button>
-      <Button onPress={() => console.log(imageData)}>Log</Button>
+      <HStack>
+        {/* <Button onPress={handleImageDelete} m="5">
+          Delete
+        </Button> */}
+        <Button
+          onPress={() => {
+            setDeleteConfirm((prevState) => !prevState), handleImageDelete;
+          }}
+          m="5"
+        >
+          {`${!deleteConfirm ? "Delete" : "Confirm Delete"}`}
+        </Button>
+        <Button onPress={onImageUpload} m="5">
+          Confirm
+        </Button>
+      </HStack>
     </View>
   );
 }
@@ -200,10 +239,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     alignItems: "center",
-    justifyContent: "space-evenly",
+    // justifyContent: "space-evenly",
   },
   title: {
-    fontSize: 20,
+    fontSize: 15,
     fontWeight: "bold",
   },
   separator: {

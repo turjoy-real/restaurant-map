@@ -10,6 +10,7 @@ import {
   Text,
 } from "native-base";
 import React, { useReducer, useCallback, useRef, useEffect } from "react";
+import app from "firebase/compat/app";
 
 import InputUI from "../../../components/molecules/Input";
 import firebaseConfig from "../../../components/config/firebaseConfig";
@@ -123,22 +124,27 @@ export default function LoginOne() {
     }
   }
 
-  async function submitOTP() {
-    try {
-      // setIsLoading(false);
-      interface OTPSubmit {
-        verificationId: any;
-        code: any;
-      }
-      const OTPConfirm: OTPSubmit = {
-        verificationId,
-        code: formState.inputValues.otp,
-      };
-      await dispatch(mobileSignIn(OTPConfirm));
-    } catch (err: any) {
-      console.log(err);
-      // setIsLoading(false);
+  function submitOTP() {
+    interface OTPSubmit {
+      verificationId: any;
+      code: any;
     }
+    const OTPConfirm: OTPSubmit = {
+      verificationId,
+      code: formState.inputValues.otp,
+    };
+    app
+      .auth()
+      .setPersistence(app.auth.Auth.Persistence.LOCAL)
+      .then(() => {
+        dispatch(mobileSignIn(OTPConfirm));
+      })
+      .catch((error) => {
+        // Handle Errors here.
+        var errorCode = error.code;
+        var errorMessage = error.message;
+        console.log("error", errorCode, errorMessage);
+      });
   }
 
   return (
