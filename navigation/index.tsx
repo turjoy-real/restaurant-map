@@ -50,15 +50,28 @@ export default function Navigation({
         userId: "",
         token: "",
       };
+
       if (user) {
         const userId = user?.uid;
         const token = await user?.getIdToken();
 
         obj.userId = userId;
         obj.token = token;
+
+        // //set auth persistence
+        // app
+        //   .auth()
+        //   .setPersistence(app.auth.Auth.Persistence.LOCAL)
+        //   .then(function () {
+        //     console.log("successfully set the persistence");
+        //     return dispatch(fetchUser(obj));
+        //   })
+        //   .catch(function (error) {
+        //     console.log("failed to ser persistence: " + error.message);
+        //   });
       }
 
-      dispatch(fetchUser(obj));
+      return dispatch(fetchUser(obj));
     });
   }, [Auth.userId]);
 
@@ -76,7 +89,6 @@ export default function Navigation({
       theme={colorScheme === "dark" ? DarkTheme : DefaultTheme}
     >
       {isAuth && didTryAutoLogin && <RootNavigator />}
-
       {!isAuth && didTryAutoLogin && <AuthNavigator />}
       {!isAuth && !didTryAutoLogin && <StartupScreen />}
     </NavigationContainer>

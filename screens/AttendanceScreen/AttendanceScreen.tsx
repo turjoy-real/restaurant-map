@@ -6,6 +6,10 @@ import {
   Divider,
   Box,
   VStack,
+  Spinner,
+  Icon,
+  IconButton,
+  Card,
 } from "native-base";
 import React, { useState, useEffect } from "react";
 import { StyleSheet } from "react-native";
@@ -13,28 +17,78 @@ import { Text, View } from "../../components/Themed";
 import useAuthData from "../../store/selectors/auth";
 import * as ImagePicker from "expo-image-picker";
 import * as Location from "expo-location";
-import { patch, post } from "../../APIs/helpers";
 import app from "firebase/compat/app";
 import "firebase/compat/storage";
-import { BoxI } from "../../components/molecules/BoxI";
+import { IconButtonUI } from "../../components/atoms/IconButton";
+import { Entypo } from "@expo/vector-icons";
+import { MaterialIcons } from "@expo/vector-icons";
+
+function getAllDaysInMonth(year: number, month: number) {
+  const createDate = new Date(year, month, 1);
+
+  const dates = [];
+
+  while (createDate.getMonth() === month) {
+    let date = createDate.getDate();
+    let month = createDate.getMonth() + 1;
+    let year = createDate.getFullYear();
+    let newDate = date + "-" + month + "-" + year;
+    dates.push(newDate);
+    createDate.setDate(createDate.getDate() + 1);
+  }
+
+  return dates;
+}
 
 export default function AttendanceScreen() {
   const Auth = useAuthData();
   const userId = Auth.userId ? Auth.userId : "";
   // Attendance image
-  const [imageData, setImageData] = useState({
+  const [attendState, setAttendState] = useState({
     title: "",
     file: "",
     author: "",
     timestamp: "",
     approved: false,
+    location: "",
+    present: false,
+    id: "",
+    address: "",
   });
   const [imgLoading, setImgLoading] = useState(false);
-  const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [image, setImage] = useState("");
   const [location, setLocation] = useState<any | null>(null);
   const [address, setAddress] = useState<any | null>(null);
   const [errorMsg, setErrorMsg] = useState<any | null>(null);
+  const [currentDate, setCurrentDate] = useState(new Date());
+  type T = typeof attendState;
+
+  const [data, setData] = useState<any>();
+  const monthNames = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+  ];
+
+  const [month, setMonth] = useState(currentDate.getMonth());
+  const [year, setYear] = useState(currentDate.getFullYear());
+
+  // useEffect(() => {
+  //   setMonth(currentDate.getMonth());
+  //   setYear(currentDate.getFullYear());
+  //   console.log(month, year);
+  // }, [currentDate]);
+
+  // Current Year and month
 
   useEffect(() => {
     (async () => {
@@ -47,6 +101,36 @@ export default function AttendanceScreen() {
       setLocation(location);
     })();
   }, []);
+
+  // Fetch Attendance summary for a month
+  useEffect(() => {
+    async function getAttendances() {
+      const response = await fetch(
+        `https://pbc-dev-2022-default-rtdb.asia-southeast1.firebasedatabase.app/attendance/${Auth.currentCompany}/${Auth.userId}`
+      );
+      const resData = await response.json();
+
+      let arr: T[] = [];
+
+      for (const key in resData) {
+        arr.push({
+          id: key,
+          title: resData[key].title,
+          file: resData[key].file,
+          author: resData[key].author,
+          timestamp: resData[key].timestamp,
+          approved: resData[key].approved,
+          address: resData[key].address,
+          location: resData[key].location,
+          present: resData[key].present,
+        });
+      }
+
+      setData(arr);
+    }
+
+    getAttendances();
+  });
 
   let text = "Waiting..";
   if (errorMsg) {
@@ -70,7 +154,12 @@ export default function AttendanceScreen() {
   const onImageUpload = async () => {
     setImgLoading(true);
     let createDate = new Date();
-    let timestamp: number = Date.parse(createDate.toISOString());
+    let date = createDate.getDate();
+    let month = createDate.getMonth() + 1;
+    let year = createDate.getFullYear();
+    let newDate = date + "-" + month + "-" + year;
+
+    let timestamp: string = newDate;
 
     const blob: any = await new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest();
@@ -96,17 +185,11 @@ export default function AttendanceScreen() {
         .ref(`users/${userId}/attendanceImages/${timestamp}/`)
         .getDownloadURL();
 
-      setImageData({
-        title: Auth.userId ? "ABC" : "Null",
-        file: fileLink,
-        author: Auth.userId ? "ABC" : "Null",
-        timestamp: createDate.toISOString(),
-        approved: false,
-      });
+      // ---will go to redux
 
       if (userId && timestamp) {
         const response = await fetch(
-          `https://pbc-dev-2022-default-rtdb.asia-southeast1.firebasedatabase.app/attendance/${userId}/${timestamp}.json`,
+          `https://pbc-dev-2022-default-rtdb.asia-southeast1.firebasedatabase.app/attendance/${Auth.currentCompany}/${userId}/${timestamp}.json`,
           {
             method: "POST",
             headers: {
@@ -115,16 +198,47 @@ export default function AttendanceScreen() {
             body: JSON.stringify({
               title: Auth.userId ? "ABC" : "Null",
               file: fileLink,
-              author: Auth.userId ? "ABC" : "Null",
+              author: Auth.userId ? Auth.fullName : "Null",
               timestamp,
               approved: false,
-              text,
-              // location,
+              address: text,
+              location,
+              present: false,
             }),
           }
         );
 
         const res = await response.json();
+
+        setAttendState({
+          title: Auth.userId ? "ABC" : "Null",
+          file: fileLink,
+          author: Auth.userId ? Auth.fullName : "Null",
+          timestamp,
+          approved: false,
+          location,
+          present: false,
+          id: res.name,
+          address: text,
+        });
+
+        let arr: T[] = [...data];
+
+        arr.push({
+          title: Auth.userId ? "ABC" : "Null",
+          file: fileLink,
+          author: Auth.userId ? Auth.fullName : "Null",
+          timestamp,
+          approved: false,
+          location,
+          present: false,
+          id: res.name,
+          address: text,
+        });
+
+        setData(arr);
+        setImage("");
+        setAddress("");
 
         // console.log("...", res);
       }
@@ -139,24 +253,41 @@ export default function AttendanceScreen() {
     setImgLoading(false);
   };
 
-  // Delete Image
-  const handleImageDelete = async () => {
-    let createDate = new Date();
-    // let timestamp: number = Date.parse(createDate.toISOString());
+  // Delete Image ---will go to redux
+  const handleImageDelete = async (id: string) => {
+    let timestamp: string = attendState.timestamp;
+    console.log("timestamp", timestamp);
     await app
       .storage()
-      .ref(`users/${userId}/attendanceImages/${imageData.timestamp}/`)
+      // gs://pbc-dev-2022.appspot.com/users/OnZNOpuoO4S7TZsT3tlHOv3bMtA2/attendanceImages
+      .ref(`users/${userId}/attendanceImages/${timestamp}/`)
       .delete()
-      .then(() => {
-        setImageData({
-          title: "Null",
-          file: "",
-          author: "Null",
-          timestamp: "",
-          approved: false,
-        });
-      })
+      .then(() => {})
       .catch((e: any) => console.log(e.message));
+
+    if (userId && timestamp) {
+      await fetch(
+        `https://pbc-dev-2022-default-rtdb.asia-southeast1.firebasedatabase.app/attendance/${userId}/${timestamp}/${id}.json`,
+        {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      setAttendState({
+        title: "",
+        file: "",
+        author: "",
+        timestamp: "",
+        approved: false,
+        location: "",
+        present: false,
+        id: "",
+        address: "",
+      });
+    }
   };
 
   // Present, absent, overtimr array
@@ -166,36 +297,56 @@ export default function AttendanceScreen() {
   //   ["Leave", "Late Fine", "Overtime"],
   // ];
 
-  // Current Year and month
-
-  const currentYear = new Date().getFullYear();
-
-  const monthNames = [
-    "January",
-    "February",
-    "March",
-    "April",
-    "May",
-    "June",
-    "July",
-    "August",
-    "September",
-    "October",
-    "November",
-    "December",
-  ];
-
-  const dateObj = new Date();
-  const monthNumber = dateObj.getMonth();
-  const monthName = monthNames[monthNumber];
-
   return (
-    <View style={styles.container}>
-      <Box m="2">
-        <Text>
-          {currentYear} {monthName}
-        </Text>
-      </Box>
+    <VStack alignItems="center">
+      <HStack>
+        <IconButton
+          icon={<Icon as={Entypo} name={"chevron-with-circle-left"} />}
+          borderRadius="full"
+          _icon={{
+            color: "muted.700",
+            size: "md",
+          }}
+          _hover={{
+            bg: "coolGray.800:alpha.20",
+          }}
+          // _pressed={{
+          //   bg: 'coolGray.800:alpha.20',
+          // }}
+          onPress={() => {
+            let date = currentDate;
+            date.setMonth(date.getMonth() - 1);
+            setCurrentDate(date);
+            setMonth(date.getMonth());
+            setYear(date.getFullYear());
+          }}
+        />
+        {/* <IconButtonUI
+          IconSpec={<Icon as={Entypo} name={"chevron-with-circle-left"} />}
+          onSelect={() => {
+            let date = currentDate;
+            date.setMonth(date.getMonth() - 1);
+            setCurrentDate(date);
+            console.log("pressed", date);
+          }}
+        /> */}
+        <Box m="2">
+          <Text>
+            {year} {monthNames[month]}
+          </Text>
+        </Box>
+        <IconButtonUI
+          IconSpec={<Icon as={Entypo} name={"chevron-with-circle-right"} />}
+          onSelect={() => {
+            let date = currentDate;
+            date.setMonth(date.getMonth() + 1);
+            setCurrentDate(date);
+            setMonth(date.getMonth());
+            setYear(date.getFullYear());
+          }}
+        />
+      </HStack>
+
       <Divider m="4" thickness="2" />
 
       {/* {presentArray.forEach((employeeA) => {
@@ -203,51 +354,62 @@ export default function AttendanceScreen() {
           console.log(data);
         });
       })} */}
+      {data
+        ? data.map((item: T) => {
+            return (
+              <Card>
+                <HStack alignItems="center" justifyContent="space-between">
+                  <Image
+                    alt={"stuff"}
+                    source={{ uri: item.file }}
+                    size="xs"
+                    m="2"
+                  />
 
-      <Button onPress={takePhoto}>Take Photo</Button>
+                  <Text>{item.address}</Text>
+                  <IconButtonUI
+                    IconSpec={<Icon as={MaterialIcons} name={"delete"} />}
+                    onSelect={() => {
+                      let date = currentDate;
+                      date.setMonth(date.getMonth() + 1);
+                      setCurrentDate(date);
+                      setMonth(date.getMonth());
+                      setYear(date.getFullYear());
+                    }}
+                  />
+                </HStack>
+              </Card>
+            );
+          })
+        : null}
 
       {!!image && (
         <>
-          <HStack alignItems="center">
+          <HStack alignItems="center" justifyContent="space-between">
             <Image alt={"stuff"} source={{ uri: image }} size="xs" m="2" />
 
             <Text>{text}</Text>
           </HStack>
+          {imgLoading ? (
+            <Spinner />
+          ) : (
+            <HStack>
+              <Button onPress={() => handleImageDelete(attendState.id)} m="5">
+                Delete
+              </Button>
+              <Button onPress={onImageUpload} m="5">
+                Confirm
+              </Button>
+            </HStack>
+          )}
         </>
       )}
-      <HStack>
-        {/* <Button onPress={handleImageDelete} m="5">
-          Delete
-        </Button> */}
-        <Button
-          onPress={() => {
-            setDeleteConfirm((prevState) => !prevState), handleImageDelete;
-          }}
-          m="5"
-        >
-          {`${!deleteConfirm ? "Delete" : "Confirm Delete"}`}
+
+      <VStack>
+        <Button onPress={takePhoto}>
+          {!!image ? "Try Again" : "Punch In"}
         </Button>
-        <Button onPress={onImageUpload} m="5">
-          Confirm
-        </Button>
-      </HStack>
-    </View>
+      </VStack>
+    </VStack>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: "center",
-    // justifyContent: "space-evenly",
-  },
-  title: {
-    fontSize: 15,
-    fontWeight: "bold",
-  },
-  separator: {
-    marginVertical: 30,
-    height: 1,
-    width: "80%",
-  },
-});

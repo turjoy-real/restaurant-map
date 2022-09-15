@@ -59,13 +59,6 @@ export const requestPhoneOtpDevice = createAsyncThunk(
   "auth/reqOTP",
   async (obj: OTPReq) => {
     const phoneProvider = new app.auth.PhoneAuthProvider();
-    const verificationId: any = await phoneProvider.verifyPhoneNumber(
-      obj.phoneNumber,
-      obj.appVerifier
-    );
-    const res = await verificationId;
-
-    console.log("req", res);
 
     try {
       const verificationId: any = await phoneProvider.verifyPhoneNumber(
@@ -73,6 +66,12 @@ export const requestPhoneOtpDevice = createAsyncThunk(
         obj.appVerifier
       );
 
+      console.log("====================================");
+      console.log(obj);
+      console.log("====================================");
+      const res = await verificationId;
+
+      console.log("req", res);
       const payload = {
         mobile: obj.phoneNumber,
         verificationId,
@@ -113,6 +112,8 @@ export const mobileSignIn = createAsyncThunk(
       token: "",
     };
 
+    console.log("obj", obj, credential);
+
     app
       .auth()
       .signInWithCredential(credential)
@@ -120,10 +121,12 @@ export const mobileSignIn = createAsyncThunk(
         const userId = res?.user?.uid;
         const token = await res?.user?.getIdToken();
 
-        console.log("stuff 1", userId, token);
-
         payload.userId = userId;
         payload.token = token;
+
+        console.log("====================================");
+        console.log(res.user);
+        console.log("====================================");
       })
       .catch((error: any) => {
         const payload: Error = {
@@ -131,7 +134,7 @@ export const mobileSignIn = createAsyncThunk(
           errorMessage: error.message,
         };
 
-        console.log("payload err", payload);
+        console.log("payload err", payload, error);
 
         return payload;
       });

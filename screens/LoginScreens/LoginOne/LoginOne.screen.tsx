@@ -124,27 +124,22 @@ export default function LoginOne() {
     }
   }
 
-  function submitOTP() {
-    interface OTPSubmit {
-      verificationId: any;
-      code: any;
+  async function submitOTP() {
+    try {
+      // setIsLoading(false);
+      interface OTPSubmit {
+        verificationId: any;
+        code: any;
+      }
+      const OTPConfirm: OTPSubmit = {
+        verificationId,
+        code: formState.inputValues.otp,
+      };
+      await dispatch(mobileSignIn(OTPConfirm));
+    } catch (err: any) {
+      console.log(err);
+      // setIsLoading(false);
     }
-    const OTPConfirm: OTPSubmit = {
-      verificationId,
-      code: formState.inputValues.otp,
-    };
-    app
-      .auth()
-      .setPersistence(app.auth.Auth.Persistence.LOCAL)
-      .then(() => {
-        dispatch(mobileSignIn(OTPConfirm));
-      })
-      .catch((error) => {
-        // Handle Errors here.
-        var errorCode = error.code;
-        var errorMessage = error.message;
-        console.log("error", errorCode, errorMessage);
-      });
   }
 
   return (
