@@ -26,7 +26,7 @@ import { RootDrawerParamList, RootStackParamList } from "../types";
 
 import { FontAwesome5 } from "@expo/vector-icons";
 
-import attendanceStackNavigator from "./stacks/attendanceStack";
+import AttendanceStackNavigator from "./stacks/attendanceStack";
 import PaymentStackNavigator from "./stacks/paymentStack";
 import SettingsStackNavigator from "./stacks/settingsStack";
 export default function Navigation({
@@ -162,7 +162,7 @@ export const BottomTabNavigator = () => {
     <Tab.Navigator screenOptions={{ headerShown: false }}>
       <Tab.Screen
         name="Attendance"
-        component={attendanceStackNavigator}
+        component={AttendanceStackNavigator}
         options={{
           tabBarIcon: () => (
             <FontAwesome5 name="user-tie" size={24} color="#16A5A3" />

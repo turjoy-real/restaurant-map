@@ -36,9 +36,9 @@ export const fetchUser = createAsyncThunk(
         payload.employedBy = resData.employedBy ? resData.employedBy : [];
         payload.mobile = resData.mobile;
         payload.fullName = resData.fullName;
-        payload.currentCompany = resData.companiesOwned[0].companyId;
+        payload.currentCompany = resData.employedBy[0].companyId;
       }
-      console.log("fetch res", resData, "payload", payload);
+      // console.log("fetch res", resData, "payload", payload);
       return payload;
     } catch (error: any) {
       const payload: Error = {
@@ -66,25 +66,25 @@ export const requestPhoneOtpDevice = createAsyncThunk(
         obj.appVerifier
       );
 
-      console.log("====================================");
-      console.log(obj);
-      console.log("====================================");
+      // console.log("====================================");
+      // console.log(obj);
+      // console.log("====================================");
       const res = await verificationId;
 
-      console.log("req", res);
+      // console.log("req", res);
       const payload = {
         mobile: obj.phoneNumber,
         verificationId,
       };
 
-      console.log("reqOtp", payload);
+      // console.log("reqOtp", payload);
       return payload;
     } catch (error: any) {
       const payload: Error = {
         error: true,
         errorMessage: error.message,
       };
-      console.log("reqOtp", payload);
+      // console.log("reqOtp", payload);
       return payload;
     }
   }
@@ -112,7 +112,7 @@ export const mobileSignIn = createAsyncThunk(
       token: "",
     };
 
-    console.log("obj", obj, credential);
+    // console.log("obj", obj, credential);
 
     app
       .auth()
@@ -124,9 +124,9 @@ export const mobileSignIn = createAsyncThunk(
         payload.userId = userId;
         payload.token = token;
 
-        console.log("====================================");
-        console.log(res.user);
-        console.log("====================================");
+        // console.log("====================================");
+        // console.log(res.user);
+        // console.log("====================================");
       })
       .catch((error: any) => {
         const payload: Error = {
@@ -134,11 +134,11 @@ export const mobileSignIn = createAsyncThunk(
           errorMessage: error.message,
         };
 
-        console.log("payload err", payload, error);
+        // console.log("payload err", payload, error);
 
         return payload;
       });
-    console.log("payload123", payload);
+    // console.log("payload123", payload);
     return payload;
   }
 );
@@ -156,7 +156,7 @@ interface User {
 export const createUser = createAsyncThunk(
   "auth/createUser",
   async (obj: User) => {
-    console.log("user", obj);
+    // console.log("user", obj);
     try {
       const response = await fetch(
         "https://gst-gps-backend-2.vercel.app/api/v1/create_user",
@@ -178,7 +178,7 @@ export const createUser = createAsyncThunk(
         ],
       };
 
-      console.log("user2", payload);
+      // console.log("user2", payload);
       return payload;
     } catch (error: any) {
       const payload: Error = {

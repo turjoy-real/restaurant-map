@@ -5,7 +5,7 @@ import useCompanyData from "../../store/selectors/company";
 
 const AttendanceStack = createNativeStackNavigator();
 
-export default function attendanceStackNavigator() {
+export default function AttendanceStackNavigator() {
   const company = useCompanyData();
 
   const currentCompanyName: string = company?.data?.companyName

@@ -43,7 +43,6 @@ function getAllDaysInMonth(year: number, month: number) {
 export default function AttendanceScreen() {
   const Auth = useAuthData();
   const userId = Auth.userId ? Auth.userId : "";
-  // Attendance image
   const [attendState, setAttendState] = useState({
     title: "",
     file: "",
@@ -82,14 +81,6 @@ export default function AttendanceScreen() {
   const [month, setMonth] = useState(currentDate.getMonth());
   const [year, setYear] = useState(currentDate.getFullYear());
 
-  // useEffect(() => {
-  //   setMonth(currentDate.getMonth());
-  //   setYear(currentDate.getFullYear());
-  //   console.log(month, year);
-  // }, [currentDate]);
-
-  // Current Year and month
-
   useEffect(() => {
     (async () => {
       let { status } = await Location.requestForegroundPermissionsAsync();
@@ -99,14 +90,23 @@ export default function AttendanceScreen() {
       }
       let location = await Location.getCurrentPositionAsync({ accuracy: 3 });
       setLocation(location);
+      Location.setGoogleApiKey("AIzaSyDaJLTTolQuMcE8p98s_ElUpBSvbRkR-6g");
     })();
   }, []);
 
-  // Fetch Attendance summary for a month
+  // Fetch attendance
+
   useEffect(() => {
+    let createDate = new Date();
+    let date = createDate.getDate();
+    let month = createDate.getMonth() + 1;
+    let year = createDate.getFullYear();
+    let newDate = date + "-" + month + "-" + year;
+
+    let timestamp: string = newDate;
     async function getAttendances() {
       const response = await fetch(
-        `https://pbc-dev-2022-default-rtdb.asia-southeast1.firebasedatabase.app/attendance/${Auth.currentCompany}/${Auth.userId}`
+        `https://pbc-dev-2022-default-rtdb.asia-southeast1.firebasedatabase.app/attendance/${Auth.currentCompany}/${timestamp}/${Auth.userId}.json`
       );
       const resData = await response.json();
 
@@ -127,18 +127,28 @@ export default function AttendanceScreen() {
       }
 
       setData(arr);
+      console.log("resData", arr, resData);
     }
 
     getAttendances();
-  });
+  }, [Auth.currentCompany, Auth.userId]);
 
-  let text = "Waiting..";
-  if (errorMsg) {
-    text = errorMsg;
-  } else if (!!location && !!address) {
-    text = `${address.name} | ${address.city}, ${address.region} ${address.postalCode}, ${address.country}`;
-    // text = JSON.stringify({ location });
-  }
+  const [text, setText] = useState("Waiting");
+
+  useEffect(() => {
+    if (errorMsg) {
+      setText(errorMsg);
+    } else if (!!location && !!address) {
+      setText(
+        `${address.name} | ${address.city}, ${address.region} ${address.postalCode}, ${address.country}`
+      );
+      // text = JSON.stringify({ location });
+    }
+    console.log("====================================");
+    console.log(location, address);
+    console.log("====================================");
+  }, [address, location, image]);
+
   const takePhoto = async () => {
     let result = await ImagePicker.launchCameraAsync();
 
@@ -147,6 +157,9 @@ export default function AttendanceScreen() {
     if (!result.cancelled) {
       setImage(result.uri);
       const add = await Location.reverseGeocodeAsync(location.coords);
+      console.log("====================================");
+      console.log(add);
+      console.log("====================================");
       setAddress(add[0]);
     }
   };
@@ -187,18 +200,33 @@ export default function AttendanceScreen() {
 
       // ---will go to redux
 
+      console.log(
+        `https://pbc-dev-2022-default-rtdb.asia-southeast1.firebasedatabase.app/attendance/${Auth.currentCompany}/${timestamp}/${userId}.json`
+      );
+
+      console.log({
+        title: Auth.userId ? "ABC" : "Null",
+        file: await fileLink,
+        author: `${Auth.fullName}`,
+        timestamp,
+        approved: false,
+        address: text,
+        location,
+        present: false,
+      });
+
       if (userId && timestamp) {
         const response = await fetch(
-          `https://pbc-dev-2022-default-rtdb.asia-southeast1.firebasedatabase.app/attendance/${Auth.currentCompany}/${userId}/${timestamp}.json`,
+          `https://pbc-dev-2022-default-rtdb.asia-southeast1.firebasedatabase.app/attendance/${Auth.currentCompany}/${timestamp}/${userId}.json`,
           {
-            method: "POST",
+            method: "PUT",
             headers: {
               "Content-Type": "application/json",
             },
             body: JSON.stringify({
               title: Auth.userId ? "ABC" : "Null",
-              file: fileLink,
-              author: Auth.userId ? Auth.fullName : "Null",
+              file: await fileLink,
+              author: `${Auth.fullName}`,
               timestamp,
               approved: false,
               address: text,
@@ -213,7 +241,7 @@ export default function AttendanceScreen() {
         setAttendState({
           title: Auth.userId ? "ABC" : "Null",
           file: fileLink,
-          author: Auth.userId ? Auth.fullName : "Null",
+          author: `${Auth.fullName}`,
           timestamp,
           approved: false,
           location,
@@ -227,7 +255,7 @@ export default function AttendanceScreen() {
         arr.push({
           title: Auth.userId ? "ABC" : "Null",
           file: fileLink,
-          author: Auth.userId ? Auth.fullName : "Null",
+          author: `${Auth.fullName}`,
           timestamp,
           approved: false,
           location,
@@ -357,7 +385,7 @@ export default function AttendanceScreen() {
       {data
         ? data.map((item: T) => {
             return (
-              <Card>
+              <Card key={item.id}>
                 <HStack alignItems="center" justifyContent="space-between">
                   <Image
                     alt={"stuff"}
@@ -369,13 +397,7 @@ export default function AttendanceScreen() {
                   <Text>{item.address}</Text>
                   <IconButtonUI
                     IconSpec={<Icon as={MaterialIcons} name={"delete"} />}
-                    onSelect={() => {
-                      let date = currentDate;
-                      date.setMonth(date.getMonth() + 1);
-                      setCurrentDate(date);
-                      setMonth(date.getMonth());
-                      setYear(date.getFullYear());
-                    }}
+                    onSelect={() => {}}
                   />
                 </HStack>
               </Card>

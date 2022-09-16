@@ -87,7 +87,7 @@ export const authSlice = createSlice({
         state.didTryAutoLogin = true;
       })
       .addCase(fetchUser.rejected, (state: authSliceState, action: any) => {
-        console.log("in reducer3", action);
+        // console.log("in reducer3", action);
         state.status = "failed";
         state.error = action.payload.error.error;
         state.errorMessage = action.payload.error.errorMessage;
@@ -104,7 +104,7 @@ export const authSlice = createSlice({
       .addCase(
         requestPhoneOtpDevice.fulfilled,
         (state: authSliceState, action: any) => {
-          console.log("in reducer 2", action);
+          // console.log("in reducer 2", action);
           state.status = "success";
           state.verificationId = action.payload.verificationId;
           state.mobile = action.payload.mobile;

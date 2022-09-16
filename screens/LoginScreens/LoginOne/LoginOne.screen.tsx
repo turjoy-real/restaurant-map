@@ -119,7 +119,7 @@ export default function LoginOne() {
       };
       await dispatch(requestPhoneOtpDevice(InputsForOTP));
     } catch (err: any) {
-      console.log(err.message);
+      // console.log(err.message);
       // setIsLoading(false);
     }
   }
@@ -137,7 +137,7 @@ export default function LoginOne() {
       };
       await dispatch(mobileSignIn(OTPConfirm));
     } catch (err: any) {
-      console.log(err);
+      // console.log(err);
       // setIsLoading(false);
     }
   }

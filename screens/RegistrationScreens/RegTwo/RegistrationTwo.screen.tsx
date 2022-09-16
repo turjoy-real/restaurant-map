@@ -39,7 +39,7 @@ export default function RegTwo() {
       };
       await dispatch(updateCompanyProfile(CompanyDetails));
     } catch (err: any) {
-      console.log(err.message);
+      // console.log(err.message);
       // setIsLoading(false);
     }
   }

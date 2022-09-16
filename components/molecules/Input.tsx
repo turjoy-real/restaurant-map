@@ -87,7 +87,7 @@ const InputUI: React.FC<Props> = ({
     // }
 
     if (type === "mobile" && !mobileRgEx.test(text)) {
-      console.log("here");
+      // console.log("here");
 
       isValid = false;
     }

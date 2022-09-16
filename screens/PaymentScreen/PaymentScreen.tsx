@@ -10,7 +10,7 @@ import { useAppDispatch } from "../../store/selectors/hooks";
 export default function PaymentScreen() {
   const { authState } = useAuthData();
   const handlePress = async () => {
-    console.log("auth stuff", authState);
+    // console.log("auth stuff", authState);
   };
   const dispatch = useAppDispatch();
   return (

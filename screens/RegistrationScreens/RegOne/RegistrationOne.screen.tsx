@@ -126,7 +126,7 @@ export default function RegOne(props: any) {
       createdAt: createDate.toISOString(),
     };
 
-    console.log("user", user?.phoneNumber);
+    // console.log("user", user?.phoneNumber);
 
     user
       ?.updateEmail(formState.inputValues.email)
