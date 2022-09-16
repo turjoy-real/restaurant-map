@@ -10,7 +10,7 @@ export const fetchProfile = createAsyncThunk(
     const { Auth } = getState() as RootState;
     try {
       const response = await get(`companies/${Auth.currentCompany}`);
-      console.log("cm res", response);
+      // console.log("cm res", response);
       const payload = {
         id: Auth.currentCompany,
         data: response,
