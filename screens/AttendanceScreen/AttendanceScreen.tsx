@@ -12,6 +12,7 @@ import {
   Card,
   ScrollView,
 } from "native-base";
+import * as FileSystem from "expo-file-system";
 import React, { useState, useEffect } from "react";
 import { StyleSheet } from "react-native";
 import { Text, View } from "../../components/Themed";
@@ -25,6 +26,8 @@ import { Entypo } from "@expo/vector-icons";
 import { MaterialIcons } from "@expo/vector-icons";
 import { timeStamp } from "console";
 import { writeFile, readFile } from "react-native-fs";
+import * as Sharing from "expo-sharing";
+
 import XLSX from "xlsx";
 
 function getAllDaysInMonth(year: number, month: number) {
@@ -328,32 +331,54 @@ export default function AttendanceScreen() {
     setImgLoading(false);
   };
 
-  //   Upload XLS
-  // const uploadXls = async () => {
-  //   let createDate = new Date();
-  //   let date = createDate.getDate();
-  //   let month = createDate.getMonth() + 1;
-  //   let year = createDate.getFullYear();
-  //   let newDate = date + "-" + month + "-" + year;
+  // Upload XLS
+  const uploadXls = async () => {
+    // let createDate = new Date();
+    // let date = createDate.getDate();
+    // let month = createDate.getMonth() + 1;
+    // let year = createDate.getFullYear();
+    // let newDate = date + "-" + month + "-" + year;
 
-  //   let timestamp: string = newDate;
+    // let timestamp: string = newDate;
 
-  //   const response = await fetch(
-  //     `https://pbc-dev-2022-default-rtdb.asia-southeast1.firebasedatabase.app/attendance/${Auth.currentCompany}/${timestamp}/${Auth.userId}.json`
-  //   );
-  //   const resData = await response.json();
+    // const response = await fetch(
+    //   `https://pbc-dev-2022-default-rtdb.asia-southeast1.firebasedatabase.app/attendance/${Auth.currentCompany}/${timestamp}/${Auth.userId}.json`
+    // );
+    // const resData = await response.json();
 
-  //   // to read excel file
+    var ws = XLSX.utils.json_to_sheet(data);
+    var wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Attendance");
+    const wbout = XLSX.write(wb, {
+      type: "base64",
+      bookType: "xlsx",
+    });
+    console.log("vhbhb", wb);
+    const uri = FileSystem.cacheDirectory + "attendances.xlsx";
+    console.log("hvsdh", uri);
+    console.log(`Writing to ${JSON.stringify(uri)} with text: ${wbout}`);
+    await FileSystem.writeAsStringAsync(uri, wbout, {
+      encoding: FileSystem.EncodingType.Base64,
+    });
 
-  //   const filePath = "/Users/copoo/Downloads/Data.xlsx";
-  //   var RNFS = require("react-native-fs");
-  //   const excelFile = await RNFS.readFile(filePath, "ascii");
-  //   const workbook = XLSX.read(excelFile, { type: "binary" });
-  //   console.log(workbook, "excelFile");
+    await Sharing.shareAsync(uri, {
+      mimeType:
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      dialogTitle: "MyWater data",
+      UTI: "com.microsoft.excel.xlsx",
+    });
+    // to read excel file
 
-  //   var ws = XLSX.utils.json_to_sheet(resData);
-  //   console.log("resData wsdddddddd", ws);
-  // };
+    // var ws = XLSX.utils.json_to_sheet(resData);
+    // console.log("ggfngffgfhg", ws);
+    // var wb = XLSX.utils.book_new();
+    // XLSX.utils.book_append_sheet(wb, ws, "Prova");
+
+    // const wbout = XLSX.write(wb, { type: "binary", bookType: "xlsx" });
+    // var RNFS = require("react-native-fs");
+    // var file = RNFS.ExternalStorageDirectoryPath + "/test.xlsx";
+    // writeFile(file, wbout, "ascii");
+  };
 
   return (
     <ScrollView>
@@ -451,14 +476,14 @@ export default function AttendanceScreen() {
             {!!image ? "Try Again" : "Punch In"}
           </Button>
         </VStack>
-        {/* <Button
+        <Button
           onPress={() => {
             uploadXls();
           }}
           m="2"
         >
-          Upload Excel
-        </Button> */}
+          Download Excel
+        </Button>
       </VStack>
     </ScrollView>
   );
