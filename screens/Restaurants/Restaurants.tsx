@@ -74,8 +74,8 @@ export default function RestaurantsScreen({ navigation }: ResProps<"Root">) {
   }, []);
 
   const fetchMore = () => {
-    const arr:any = loadedPlaces?.slice(data?.length)
-    (data && loadedPlaces) ? setData([...data, ...arr ]) : null
+    const arr:any = loadedPlaces.slice(data.length)
+    setData([...data, ...arr ])
   }
 
   return (
@@ -83,7 +83,7 @@ export default function RestaurantsScreen({ navigation }: ResProps<"Root">) {
       <FlatList
         ListFooterComponent={
             <Box m="2">
-                <Button onPress={fetchMore} m="2">Fetch More</Button>
+                {!!data ? <Button onPress={fetchMore} m="2">Fetch More</Button> : null}
                 <Button onPress={() => dispatch(signOut())} m="2">Sign out</Button>
             </Box>
           
