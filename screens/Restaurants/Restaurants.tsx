@@ -25,7 +25,9 @@ import getCurrentLocation from "../../utils/getCurrentLocation";
 export default function RestaurantsScreen({ navigation }: ResProps<"Root">) {
   const isFocused = useIsFocused();
   const [loadedPlaces, setLoadedPlaces] = useState<null | Place[]>(null);
+  const [data, setData] = useState<null | Place[]>(null);
   const [location, setLocation] = useState<null | {
+
     lat: number;
     lng: number;
   }>(null);
@@ -40,14 +42,15 @@ export default function RestaurantsScreen({ navigation }: ResProps<"Root">) {
 
   useEffect(() => {
     async function loadPlaces() {
+      const apiData = await get("restaurants");
       //Fetch data from database
       const data = await fetchPlaces();
       if (data.length > 0) {
         setLoadedPlaces(data.restaurants);
+         setData(data.restaurants.slice(0,10))
         // console.log("from db", data.restaurants);
       } else {
         // If database empty fetch it from
-        const apiData = await get("restaurants");
         const loadedRestaurants = [];
         for (const key in apiData) {
           const newData = new Place(
@@ -61,6 +64,7 @@ export default function RestaurantsScreen({ navigation }: ResProps<"Root">) {
           loadedRestaurants.push(newData);
         }
         setLoadedPlaces(loadedRestaurants);
+        setData(loadedRestaurants.slice(0,10))
       }
     }
 
@@ -69,15 +73,25 @@ export default function RestaurantsScreen({ navigation }: ResProps<"Root">) {
     }
   }, []);
 
+  const fetchMore = () => {
+    const arr:any = loadedPlaces?.slice(data?.length)
+    (data && loadedPlaces) ? setData([...data, ...arr ]) : null
+  }
+
   return (
     <Box>
       <FlatList
-        ListHeaderComponent={
-          <Button onPress={() => dispatch(signOut())}>Sign out</Button>
+        ListFooterComponent={
+            <Box m="2">
+                <Button onPress={fetchMore} m="2">Fetch More</Button>
+                <Button onPress={() => dispatch(signOut())} m="2">Sign out</Button>
+            </Box>
+          
         }
-        data={loadedPlaces}
+        keyExtractor={(item)=> item.id}
+        data={data}
         renderItem={({ item }) => (
-          <Box alignItems="center">
+          <Box alignItems="center" key={item.id}>
             <Box
               minW="80"
               rounded="lg"

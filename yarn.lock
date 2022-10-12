@@ -9925,6 +9925,13 @@ expo-pwa@0.0.122:
     commander "2.20.0"
     update-check "1.5.3"
 
+expo-screen-orientation@~4.2.0:
+  version "4.2.0"
+  resolved "https://registry.yarnpkg.com/expo-screen-orientation/-/expo-screen-orientation-4.2.0.tgz#e58da1056e01246a0e55f0c6965ae9b61926cb57"
+  integrity sha512-uKWu2sKDMjicDTc6gycAu3NOTNIBMXWBCxkvvYAgLKaYXDp4YN7d6yPQ0+U2z4w+0mFngJCgksxXA7/hHSZkwQ==
+  dependencies:
+    "@expo/config-plugins" "^4.0.14"
+
 expo-sharing@~10.2.0:
   version "10.2.0"
   resolved "https://registry.yarnpkg.com/expo-sharing/-/expo-sharing-10.2.0.tgz#527a143d7365998ab77cb44a84b81c793e51dc4e"

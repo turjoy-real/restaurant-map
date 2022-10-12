@@ -19,6 +19,7 @@ import { fetchUser, signOut } from "../store/actions/auth";
 import useAuthData from "../store/selectors/auth";
 import { useAppDispatch } from "../store/selectors/hooks";
 import {
+  AuthParamList,
   AuthStackParamList,
   RootParamList,
   RootStackParamList,
@@ -53,9 +54,7 @@ export default function Navigation({
 
 
   const dispatch = useAppDispatch();
-  const Auth = useAuthData();
-  // console.log("Auth", Auth);
-  
+  const Auth = useAuthData();  
 
   // Handle user state changes and passing email of active user in redux
   React.useEffect(() => {
@@ -74,7 +73,7 @@ export default function Navigation({
 
         obj.userId = userId;
         obj.token = token;
-      }      
+      }
       return dispatch(fetchUser(obj));
     });
 
@@ -97,7 +96,7 @@ export default function Navigation({
 
 
 // AuthStack
-const AuthStack = createNativeStackNavigator<AuthStackParamList>();
+const AuthStack = createNativeStackNavigator<AuthParamList>();
 
 function AuthNavigator() {
   return (

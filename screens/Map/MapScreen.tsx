@@ -34,34 +34,28 @@ export default function MapScreen({ route }: ResProps<"Root">) {
       <MapView
         style={styles.map}
         initialRegion={{
-          latitude: origin.latitude,
-          longitude: origin.longitude,
+          latitude: destination.latitude,
+          longitude: destination.longitude,
           latitudeDelta: 0.0922,
           longitudeDelta: 0.0421,
         }}
       >
-        {/* <MapViewDirections
-          origin={origin}
-          destination={destination}
-          apikey={GOOGLE_MAPS_APIKEY}
-        /> */}
-
         {/* User Marker  */}
         <Marker
           coordinate={{
-            latitude: destination.latitude,
-            longitude: destination.longitude,
+            latitude: origin.latitude,
+            longitude: origin.longitude,
           }}
         />
 
         {/* Shop Marker  */}
         <Marker
           coordinate={{
-            latitude: origin.latitude,
-            longitude: origin.longitude,
+            latitude: destination.latitude,
+            longitude: destination.longitude,
           }}
         >
-          <Box>
+          <Box justifyContent={"center"} alignItems={"center"}>
             <Box
               // minW="80"
               rounded="lg"
