@@ -1,12 +1,4 @@
-/**
- * Learn more about using TypeScript with React Navigation:
- * https://reactnavigation.org/docs/typescript/
- */
-import { DrawerScreenProps } from "@react-navigation/drawer";
-import {
-  CompositeScreenProps,
-  NavigatorScreenParams,
-} from "@react-navigation/native";
+import { NavigatorScreenParams } from "@react-navigation/native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { extendTheme } from "native-base";
 
@@ -17,38 +9,33 @@ declare global {
 }
 
 export type RootStackParamList = {
-  Root: NavigatorScreenParams<RootDrawerParamList> | undefined;
-  Modal: undefined;
-  NotFound: undefined;
-  // ProfileScreen: undefined;
+  Root: NavigatorScreenParams<RootParamList> | undefined;
+  LoginOne: NavigatorScreenParams<AuthParamList> | undefined;
 };
 
-export type RootStackScreenProps<Screen extends keyof RootStackParamList> =
-  NativeStackScreenProps<RootStackParamList, Screen>;
-
-// Drawer Navigation Types
-
-export type RootDrawerParamList = {
-  // TabOne: undefined;
-  // TabTwo: undefined;
-
-  "leave templates": undefined;
-  LoginOne: undefined;
-  LoginTwo: undefined;
-  RegOne: undefined;
-  RegTwo: undefined;
-  Attendance: undefined;
-  Payment: undefined;
-  Settings: undefined;
+export type AuthParamList = {
+  Login: undefined;
 };
 
-// export type ProfileRouteProp = RootTabScreenProps<RootDrawerParamList, "Profile">;
+export type RootParamList = {
+  Restaurants: undefined;
+  Maps: {
+    data: {
+      origin: {
+        latitude: number;
+        longitude: number;
+      };
+      destination: {
+        latitude: number;
+        longitude: number;
+      };
+      title: string,
+      rating: number
+    };
+  };
+};
 
-export type RootDrawerScreenProps<Screen extends keyof RootDrawerParamList> =
-  CompositeScreenProps<
-    DrawerScreenProps<RootDrawerParamList, Screen>,
-    NativeStackScreenProps<RootStackParamList>
-  >;
+export type ResProps = NativeStackScreenProps<RootStackParamList, "Root">;
 
 // To enable typescript with native base
 
@@ -79,4 +66,12 @@ declare module "native-base" {
 export interface Error {
   error: boolean;
   errorMessage: string;
+}
+
+export interface Place {
+  title: string;
+  imageUrl: string;
+  location: { lat: number; lng: number };
+  id: string;
+  rating: number;
 }

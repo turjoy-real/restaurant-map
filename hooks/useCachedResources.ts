@@ -1,12 +1,15 @@
 import { FontAwesome } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Font from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
-import app from "firebase/compat/app";
 import { initializeAuth } from "firebase/auth";
 import { getReactNativePersistence } from "firebase/auth/react-native";
+import app from "firebase/compat/app";
 import { useEffect, useState } from "react";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import firebaseConfig from "../components/config/firebaseConfig";
+
+// import firebaseConfig from "../config/firebaseConfig";
+import firebaseConfig from "../config/firebaseConfig";
+import { init } from "../utils/database";
 
 export default function useCachedResources() {
   const [isLoadingComplete, setLoadingComplete] = useState(false);
@@ -28,6 +31,9 @@ export default function useCachedResources() {
         initializeAuth(defaultApp, {
           persistence: getReactNativePersistence(AsyncStorage),
         });
+
+        // Load db
+        await init();
       } catch (e) {
         // We might want to provide this error information to an error reporting service
         console.warn(e);

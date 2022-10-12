@@ -1,2 +1,2 @@
 export const baseUrl =
-  "https://pbc-dev-2022-default-rtdb.asia-southeast1.firebasedatabase.app/";
+  "https://test-11348-default-rtdb.firebaseio.com/";

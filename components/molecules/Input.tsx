@@ -1,5 +1,7 @@
-import { VStack, Text, Input, Box } from "native-base";
+import { VStack, Input, Box } from "native-base";
 import React, { useReducer, useEffect } from "react";
+
+import { Text } from "../Themed";
 
 // An enum with all the types of actions to use in our reducer
 enum InputActionKind {
@@ -80,17 +82,26 @@ const InputUI: React.FC<Props> = ({
     // const textNumUnderscoreRegex = /^[A-Za-z0-9_]*$/;
     // const textNumRegex = /^[A-Za-z0-9()]*$/;
     // const numRegex = /^[0-9]*$/;
-    const mobileRgEx = /^[0-9+]*$/;
+    // const mobileRgEx = /^[0-9+]*$/;
     let isValid = true;
     // if (props.textNumSpace && !textNumSpaceRegex.test(text)) {
     //   isValid = false;
     // }
 
-    if (type === "mobile" && !mobileRgEx.test(text)) {
-      // console.log("here");
-
+    if (type === "email" && !emailRegex.test(text)) {
       isValid = false;
     }
+
+    if (type === "password" && text.length < 5) {
+      isValid = false;
+    }
+
+
+    // if (type === "mobile" && !mobileRgEx.test(text)) {
+    //   // console.log("here");
+
+    //   isValid = false;
+    // }
 
     // if (props.subAccountId && !textNumUnderscoreRegex.test(text)) {
     //   isValid = false;
@@ -155,7 +166,7 @@ const InputUI: React.FC<Props> = ({
       />
       {!inputState.isValid && inputState.touched && (
         <Box>
-          <Text color="red">{errorText}</Text>
+          <Text style={{color: "red"}}>{errorText}</Text>
         </Box>
       )}
     </VStack>

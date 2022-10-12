@@ -1,4 +1,5 @@
 import { FirebaseRecaptchaVerifierModal } from "expo-firebase-recaptcha";
+import app from "firebase/compat/app";
 import {
   Box,
   Button,
@@ -9,18 +10,12 @@ import {
   Stack,
   Text,
 } from "native-base";
-import React, { useReducer, useCallback, useRef, useEffect } from "react";
-import app from "firebase/compat/app";
+import React, { useReducer, useCallback } from "react";
+import { Alert } from "react-native";
 
 import InputUI from "../../../components/molecules/Input";
-import firebaseConfig from "../../../components/config/firebaseConfig";
-import {
-  fetchUser,
-  mobileSignIn,
-  requestPhoneOtpDevice,
-} from "../../../store/actions/auth";
-import useAuthData from "../../../store/selectors/auth";
-import { useAppDispatch, useAppSelector } from "../../../store/selectors/hooks";
+import { mobileSignIn } from "../../../store/actions/auth";
+import { useAppDispatch } from "../../../store/selectors/hooks";
 
 // An enum with all the types of actions to use in our reducer
 enum InputActionKind {
@@ -38,13 +33,13 @@ interface InputAction {
 // An interface for our state
 
 interface InputValues {
-  mobile: string;
-  otp: string;
+  email: string;
+  password: string;
 }
 
 interface InputValidities {
-  mobile: boolean;
-  otp: boolean;
+  email: boolean;
+  password: boolean;
 }
 interface InputState {
   inputValues: InputValues;
@@ -77,21 +72,17 @@ const formReducer = (state: InputState, action: InputAction) => {
 };
 
 export default function LoginOne() {
-  const { userId, token } = useAuthData();
-  const auth = useAppSelector((state) => state.Auth);
   const [formState, dispatchFormState] = useReducer(formReducer, {
     inputValues: {
-      mobile: "",
-      otp: "",
+      email: "",
+      password: "",
     },
     inputValidities: {
-      mobile: false,
-      otp: false,
+      email: false,
+      password: false,
     },
     formIsValid: false,
   });
-
-  const { verificationId, status } = useAuthData();
   const inputChangeHandler = useCallback(
     (inputIdentifier: any, inputValue: any, inputValidity: any) => {
       dispatchFormState({
@@ -104,93 +95,56 @@ export default function LoginOne() {
     [dispatchFormState]
   );
 
-  const recaptchaVerifier = useRef(null);
   const dispatch = useAppDispatch();
-  async function requestOTP() {
-    try {
-      // setIsLoading(false);
-      interface OTPReq {
-        phoneNumber: string;
-        appVerifier: any;
+  async function handleSubmit() {
+    if (formState.formIsValid) {
+      try {
+        // setIsLoading(false);
+        interface Creds {
+          email: string;
+          password: string;
+        }
+        const creds: Creds = {
+          email: formState.inputValues.email,
+          password: formState.inputValues.password,
+        };
+        await dispatch(mobileSignIn(creds));
+      } catch (err: any) {
+        console.log(err);
       }
-      const InputsForOTP: OTPReq = {
-        phoneNumber: formState.inputValues.mobile,
-        appVerifier: recaptchaVerifier.current,
-      };
-      await dispatch(requestPhoneOtpDevice(InputsForOTP));
-    } catch (err: any) {
-      // console.log(err.message);
-      // setIsLoading(false);
-    }
-  }
-
-  async function submitOTP() {
-    try {
-      // setIsLoading(false);
-      interface OTPSubmit {
-        verificationId: any;
-        code: any;
-      }
-      const OTPConfirm: OTPSubmit = {
-        verificationId,
-        code: formState.inputValues.otp,
-      };
-      await dispatch(mobileSignIn(OTPConfirm));
-    } catch (err: any) {
-      // console.log(err);
-      // setIsLoading(false);
+    } else {
+      Alert.alert("Check Form", "Some fields are incorrect", [
+        { text: "OK", onPress: () => console.log("OK Pressed") },
+      ]);
     }
   }
 
   return (
     <Center>
       <Box m="10">
-        <FirebaseRecaptchaVerifierModal
-          ref={recaptchaVerifier}
-          firebaseConfig={firebaseConfig}
-          attemptInvisibleVerification
-        />
-        {status === "loading" ? (
-          <HStack space={2} alignItems="center">
-            <Spinner accessibilityLabel="Loading posts" />
-            <Heading color="primary.500" fontSize="md">
-              Loading
-            </Heading>
-          </HStack>
-        ) : (
-          <Stack alignItems="center" space={3}>
-            {verificationId ? (
-              <>
-                <InputUI
-                  initialValue=""
-                  initiallyValid
-                  id="otp"
-                  label="type_in_otp"
-                  onInputChange={inputChangeHandler}
-                  errorText="Error"
-                  type={"mobile"}
-                />
-                <Button onPress={submitOTP}>Submit OTP</Button>
-                <Button onPress={requestOTP}>Resend OTP</Button>
-              </>
-            ) : (
-              <Box m="2">
-                <InputUI
-                  initialValue=""
-                  initiallyValid
-                  id="mobile"
-                  label="Type in your mobile number"
-                  onInputChange={inputChangeHandler}
-                  errorText="Error"
-                  type={"mobile"}
-                />
-                <Button onPress={requestOTP} m="10">
-                  Request OTP
-                </Button>
-              </Box>
-            )}
-          </Stack>
-        )}
+        <Stack alignItems="center" space={3}>
+          <InputUI
+            initialValue=""
+            initiallyValid
+            id="email"
+            label="Email"
+            onInputChange={inputChangeHandler}
+            errorText="Type correct email"
+            type="email"
+          />
+          <InputUI
+            initialValue=""
+            initiallyValid
+            id="password"
+            label="Password"
+            onInputChange={inputChangeHandler}
+            errorText="Not less than 5 letters"
+            type="password"
+          />
+          <Button onPress={handleSubmit} m="10">
+            Login
+          </Button>
+        </Stack>
       </Box>
     </Center>
   );
